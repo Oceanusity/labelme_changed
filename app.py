@@ -987,7 +987,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if s.line_color != self.lineColor else None,
                 fill_color=s.fill_color.getRgb()
                 if s.fill_color != self.fillColor else None,
-                points=[(p.x(), p.y()) for p in s.points],
+                points=[[p.x(), p.y()] for p in s.points],  #
                 shape_type=s.shape_type,
                 flags=s.flags
             )

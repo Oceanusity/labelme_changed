@@ -10,7 +10,7 @@ from labelme.logger import logger
 from labelme import PY2
 from labelme import QT4
 from labelme import utils
-from .my_utils import my_crop
+from .my_utils import my_crop, my_change_data, my_get_bbox
 
 
 class LabelFileError(Exception):
@@ -30,10 +30,10 @@ class LabelFile(object):
         self.filename = filename
 
     @staticmethod
-    def load_image_file(filename, data):
+    def load_image_file(filename):
         try:
-			#image_pil = PIL.Image.open(filename)   # here at this place, I get the output image in the windows
-            image_pil, corp_img_bbox = my_crop(filename, data)
+            image_pil = PIL.Image.open(filename)   # here at this place, I get the output image in the windows
+            image_pil, corp_img_bbox = my_crop(filename)
         except IOError:
             logger.error('Failed opening image file: {}'.format(filename))
             return
@@ -79,16 +79,20 @@ class LabelFile(object):
             # relative path from label file to relative path from cwd
 			# here just the image data, annotation data is dfferent from this, so we pre-define a path to fetch the annotation for crop
             imagePath = osp.join(osp.dirname(filename), data['imagePath'])
-            imageData = self.load_image_file(imagePath,data)
+            imageData = self.load_image_file(imagePath)
             flags = data.get('flags') or {}
             imagePath = data['imagePath']
-            self._check_image_height_and_width(
-                base64.b64encode(imageData).decode('utf-8'),
-                data.get('imageHeight'),
-                data.get('imageWidth'),
-            )
+            # self._check_image_height_and_width(
+            #     base64.b64encode(imageData).decode('utf-8'),
+            #     data.get('imageHeight'),
+            #     data.get('imageWidth'),
+            # )
             lineColor = data['lineColor']
             fillColor = data['fillColor']
+
+            bbox = my_get_bbox(filename)
+            my_change_data(bbox, data)
+
             shapes = (
                 (
                     s['label'],
@@ -98,7 +102,7 @@ class LabelFile(object):
                     s.get('shape_type', 'polygon'),
                     s.get('flags', {}),
                 )
-                for s in data['shapes']
+                for s in data['shapes'] 
             )
         except Exception as e:
             raise LabelFileError(e)
@@ -169,10 +173,12 @@ class LabelFile(object):
             lineColor=lineColor,
             fillColor=fillColor,
             imagePath=imagePath,
-            imageData=imageData,
+            imageData=None,
             imageHeight=imageHeight,
             imageWidth=imageWidth,
         )
+        bbox = my_get_bbox(filename)
+        my_change_data(bbox, data, inv = 1)
         for key, value in otherData.items():
             data[key] = value
         try:

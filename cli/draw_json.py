@@ -5,6 +5,7 @@ import base64
 import json
 import os
 import sys
+import pdb
 
 import matplotlib.pyplot as plt
 
@@ -20,7 +21,8 @@ def main():
     args = parser.parse_args()
 
     json_file = args.json_file
-
+    #json_file = "D:/0test/1.json"
+    #pdb.set_trace()
     data = json.load(open(json_file))
 
     if data['imageData']:
