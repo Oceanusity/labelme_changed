@@ -10,6 +10,7 @@ from labelme.logger import logger
 from labelme import PY2
 from labelme import QT4
 from labelme import utils
+from .my_utils import my_crop
 
 
 class LabelFileError(Exception):
@@ -29,9 +30,10 @@ class LabelFile(object):
         self.filename = filename
 
     @staticmethod
-    def load_image_file(filename):
+    def load_image_file(filename, data):
         try:
-            image_pil = PIL.Image.open(filename)
+			#image_pil = PIL.Image.open(filename)   # here at this place, I get the output image in the windows
+            image_pil, corp_img_bbox = my_crop(filename, data)
         except IOError:
             logger.error('Failed opening image file: {}'.format(filename))
             return
@@ -65,6 +67,8 @@ class LabelFile(object):
         try:
             with open(filename, 'rb' if PY2 else 'r') as f:
                 data = json.load(f)
+				
+			# I changed here to ignore the imageData
             '''
             if data['imageData'] is not None:
                 imageData = base64.b64decode(data['imageData'])
@@ -72,9 +76,10 @@ class LabelFile(object):
                     imageData = utils.img_data_to_png_data(imageData)
             else:
             '''
-                # relative path from label file to relative path from cwd
+            # relative path from label file to relative path from cwd
+			# here just the image data, annotation data is dfferent from this, so we pre-define a path to fetch the annotation for crop
             imagePath = osp.join(osp.dirname(filename), data['imagePath'])
-            imageData = self.load_image_file(imagePath)
+            imageData = self.load_image_file(imagePath,data)
             flags = data.get('flags') or {}
             imagePath = data['imagePath']
             self._check_image_height_and_width(
@@ -113,23 +118,27 @@ class LabelFile(object):
         self.filename = filename
         self.otherData = otherData
 
-    @staticmethod
+    @staticmethod # I need to crop the image and I don't want the image size changed.
     def _check_image_height_and_width(imageData, imageHeight, imageWidth):
-        img_arr = utils.img_b64_to_arr(imageData)
-        if imageHeight is not None and img_arr.shape[0] != imageHeight:
-            logger.error(
-                'imageHeight does not match with imageData or imagePath, '
-                'so getting imageHeight from actual image.'
-            )
-            imageHeight = img_arr.shape[0]
-        if imageWidth is not None and img_arr.shape[1] != imageWidth:
-            logger.error(
-                'imageWidth does not match with imageData or imagePath, '
-                'so getting imageWidth from actual image.'
-            )
-            imageWidth = img_arr.shape[1]
+		
+        # img_arr = utils.img_b64_to_arr(imageData)
+        # if imageHeight is not None and img_arr.shape[0] != imageHeight:
+        #     logger.error(
+        #         'imageHeight does not match with imageData or imagePath, '
+        #         'so getting imageHeight from actual image.'
+        #     )
+        #     imageHeight = img_arr.shape[0]
+        # if imageWidth is not None and img_arr.shape[1] != imageWidth:
+        #     logger.error(
+        #         'imageWidth does not match with imageData or imagePath, '
+        #         'so getting imageWidth from actual image.'
+        #     )
+        #     imageWidth = img_arr.shape[1]
+		
         return imageHeight, imageWidth
 
+
+	# save json annotation, I can change everything here.
     def save(
         self,
         filename,
@@ -143,6 +152,7 @@ class LabelFile(object):
         otherData=None,
         flags=None,
     ):
+	# won't get in, bcz null forever
         if imageData is not None:
             imageData = base64.b64encode(imageData).decode('utf-8')
             imageHeight, imageWidth = self._check_image_height_and_width(
@@ -175,3 +185,5 @@ class LabelFile(object):
     @staticmethod
     def is_label_file(filename):
         return osp.splitext(filename)[1].lower() == LabelFile.suffix
+
+

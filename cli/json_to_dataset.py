@@ -43,6 +43,8 @@ def main():
             imageData = base64.b64encode(imageData).decode('utf-8') 
     img = utils.img_b64_to_arr(imageData)  # b64 decode to image. 
 
+
+	# give all the label in the shapes a idx
     label_name_to_value = {'_background_': 0}
     for shape in sorted(data['shapes'], key=lambda x: x['label']):
         label_name = shape['label']
