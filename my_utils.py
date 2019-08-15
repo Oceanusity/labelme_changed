@@ -58,7 +58,8 @@ def my_change_data(bbox, data, inv = 0):
     ymin = bbox[1]
     if "shapes" in data.keys() and inv == 0:
         for i in range(len(data["shapes"])):
-            if data["shapes"][i]["shape_type"] == "linestrip":
+            if (len(data["shapes"][i]) != 0 and \
+				(data["shapes"][i]["shape_type"] == "linestrip" or data["shapes"][i]["shape_type"] == "polygon" or data["shapes"][i]["shape_type"] == "point")):
                 for j in range(len(data["shapes"][i]["points"])):
                     data["shapes"][i]["points"][j][0] =  data["shapes"][i]["points"][j][0] - xmin
                     data["shapes"][i]["points"][j][1] =  data["shapes"][i]["points"][j][1] - ymin
@@ -66,7 +67,7 @@ def my_change_data(bbox, data, inv = 0):
     elif "shapes" in data.keys() and inv == 1:
         for i in range(len(data["shapes"])):
             shapes_list = []
-            if data["shapes"][i]["shape_type"] == "linestrip":
+            if data["shapes"][i]["shape_type"] == "linestrip" or data["shapes"][i]["shape_type"] == "polygon" or data["shapes"][i]["shape_type"] == "point":
                 for j in range(len(data["shapes"][i]["points"])):
                     pt_list = list(data["shapes"][i]["points"][j])
                     pt_list[0] = pt_list[0] + xmin
